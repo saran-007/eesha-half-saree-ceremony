@@ -5,8 +5,19 @@ import { EVENT } from "@/lib/constants";
 export function HeroVideo() {
   return (
     <section className="relative w-full sparkle-bg">
-      <div className="relative z-10 max-w-4xl mx-auto px-4 pt-10 pb-4 sm:pt-14 sm:pb-6">
-        <h1 className="text-center font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-3 gold-shimmer animate-fade-in-up leading-tight">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 pt-10 pb-4 sm:pt-14 sm:pb-6">
+        <h1
+          className="text-center font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-3 leading-tight"
+          style={{
+            background:
+              "linear-gradient(90deg, #c9973f 0%, #e0be6a 25%, #d4a843 50%, #e0be6a 75%, #c9973f 100%)",
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "shimmer 4s linear infinite",
+          }}
+        >
           {EVENT.title}
         </h1>
 
