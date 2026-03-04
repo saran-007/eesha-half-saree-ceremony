@@ -46,16 +46,41 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    const { data, error } = await supabase
-      .from("guests")
-      .upsert(toInsert, { onConflict: "email", ignoreDuplicates: true })
-      .select();
+    const results = [];
+    const errors = [];
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    for (const guest of toInsert) {
+      if (guest.email) {
+        const { data: existing } = await supabase
+          .from("guests")
+          .select("id")
+          .eq("email", guest.email)
+          .maybeSingle();
+
+        if (existing) {
+          errors.push(`${guest.first_name} ${guest.last_name} (${guest.email}) already exists`);
+          continue;
+        }
+      }
+
+      const { data, error } = await supabase
+        .from("guests")
+        .insert(guest)
+        .select()
+        .single();
+
+      if (error) {
+        errors.push(`${guest.first_name} ${guest.last_name}: ${error.message}`);
+      } else if (data) {
+        results.push(data);
+      }
     }
 
-    return NextResponse.json({ guests: data, count: data?.length || 0 });
+    return NextResponse.json({
+      guests: results,
+      count: results.length,
+      errors: errors.length > 0 ? errors : undefined,
+    });
   } catch {
     return NextResponse.json(
       { error: "Internal server error" },

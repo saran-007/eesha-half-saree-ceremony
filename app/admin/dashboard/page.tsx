@@ -488,18 +488,31 @@ function AddGuestForm({ onAdded }: { onAdded: () => void }) {
     mobile: "",
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.first_name || !form.last_name) return;
     setSaving(true);
+    setError("");
     try {
-      await fetch("/api/admin/guests", {
+      const res = await fetch("/api/admin/guests", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ guests: [form] }),
       });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to add guest");
+        return;
+      }
+      if (data.errors?.length) {
+        setError(data.errors.join(", "));
+        return;
+      }
       onAdded();
+    } catch {
+      setError("Failed to add guest. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -536,6 +549,11 @@ function AddGuestForm({ onAdded }: { onAdded: () => void }) {
           onChange={(e) => setForm({ ...form, mobile: e.target.value })}
           className="bg-navy-800 border border-gold-500/20 rounded-lg px-4 py-2.5 text-cream-50 font-sans placeholder:text-cream-200/30 focus:outline-none focus:border-gold-400 transition-colors"
         />
+        {error && (
+          <div className="sm:col-span-2">
+            <p className="text-rose-400 text-sm font-sans">{error}</p>
+          </div>
+        )}
         <div className="sm:col-span-2 flex gap-3">
           <button
             type="submit"

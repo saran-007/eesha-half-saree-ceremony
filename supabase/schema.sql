@@ -40,6 +40,14 @@ CREATE POLICY "Allow public update via token"
   USING (true)
   WITH CHECK (true);
 
+CREATE POLICY "Allow public insert"
+  ON guests FOR INSERT
+  WITH CHECK (true);
+
+CREATE POLICY "Allow public delete"
+  ON guests FOR DELETE
+  USING (true);
+
 CREATE POLICY "Allow service role full access"
   ON guests FOR ALL
   USING (auth.role() = 'service_role');
