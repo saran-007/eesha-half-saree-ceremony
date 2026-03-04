@@ -18,14 +18,37 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Eesha's Half Saree Ceremony | March 29, 2026",
+  title: "Eesha Half Saree Ceremony | March 29, 2026",
   description:
     "You're invited to celebrate Eesha's Half Saree Ceremony on Sunday, March 29th 2026 at Celebrations Event Center, Leander, TX.",
   openGraph: {
-    title: "Eesha's Half Saree Ceremony",
+    title: "Eesha Half Saree Ceremony",
     description:
       "Join us to celebrate Eesha's Half Saree Ceremony on Sunday, March 29th 2026.",
     type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Eesha Half Saree Ceremony",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Eesha Half Saree Ceremony",
+    description:
+      "Join us to celebrate Eesha's Half Saree Ceremony on Sunday, March 29th 2026.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
   },
 };
 
@@ -36,6 +59,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
+        <meta name="googlebot" content="noindex, nofollow" />
+      </head>
       <body
         className={`${cormorant.variable} ${outfit.variable} antialiased`}
       >
