@@ -1,11 +1,101 @@
 "use client";
 
-import { useState } from "react";
-import { Play } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { Volume2, VolumeX } from "lucide-react";
 import { EVENT } from "@/lib/constants";
 
+const VIDEO_URL = process.env.NEXT_PUBLIC_VIDEO_URL;
+
 export function HeroVideo() {
-  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+  const [showUnmuteHint, setShowUnmuteHint] = useState(true);
+
+  useEffect(() => {
+    if (!showUnmuteHint) return;
+    const timer = setTimeout(() => setShowUnmuteHint(false), 10000);
+    return () => clearTimeout(timer);
+  }, [showUnmuteHint]);
+
+  function toggleMute() {
+    if (videoRef.current) {
+      const next = !muted;
+      videoRef.current.muted = next;
+      setMuted(next);
+      if (!next) setShowUnmuteHint(false);
+    }
+  }
+
+  if (!VIDEO_URL) {
+    return <YouTubeFallback />;
+  }
+
+  return (
+    <section className="relative w-full">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 pt-10 pb-4 sm:pt-14 sm:pb-6">
+        <h1
+          className="text-center font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-3 leading-tight"
+          style={{
+            background:
+              "linear-gradient(90deg, #c9973f 0%, #e0be6a 25%, #d4a843 50%, #e0be6a 75%, #c9973f 100%)",
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "shimmer 4s linear infinite",
+          }}
+        >
+          {EVENT.title}
+        </h1>
+
+        <div className="mt-6">
+          <div className="ornamental-border rounded-lg overflow-hidden shadow-2xl shadow-gold-500/10 relative">
+            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+                preload="auto"
+              >
+                <source src={VIDEO_URL} type="video/mp4" />
+              </video>
+
+              {/* Unmute prompt */}
+              <button
+                onClick={toggleMute}
+                className="absolute bottom-4 right-4 z-20 cursor-pointer"
+                aria-label={muted ? "Unmute video" : "Mute video"}
+              >
+                {muted ? (
+                  <div
+                    className={`flex items-center gap-2 px-4 py-2.5 bg-gold-500/90 hover:bg-gold-400 text-navy-950 rounded-full font-sans text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-gold-500/30 ${
+                      showUnmuteHint ? "animate-pulse" : ""
+                    }`}
+                  >
+                    <VolumeX className="w-4 h-4" />
+                    <span className="hidden sm:inline">Tap to hear the music</span>
+                    <span className="sm:hidden">Unmute</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2.5 bg-navy-950/60 hover:bg-navy-950/80 text-cream-50 rounded-full font-sans text-sm transition-all backdrop-blur-sm">
+                    <Volume2 className="w-4 h-4" />
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function YouTubeFallback() {
+  const videoRef = useRef<HTMLIFrameElement>(null);
+  const [started, setStarted] = useState(false);
   const thumbnailUrl = `https://img.youtube.com/vi/${EVENT.youtubeVideoId}/maxresdefault.jpg`;
 
   return (
@@ -29,8 +119,9 @@ export function HeroVideo() {
         <div className="mt-6">
           <div className="ornamental-border rounded-lg overflow-hidden shadow-2xl shadow-gold-500/10">
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-              {playing ? (
+              {started ? (
                 <iframe
+                  ref={videoRef}
                   className="absolute inset-0 w-full h-full"
                   src={`https://www.youtube.com/embed/${EVENT.youtubeVideoId}?autoplay=1&loop=1&playlist=${EVENT.youtubeVideoId}&rel=0&modestbranding=1`}
                   title="Eesha Half Saree Ceremony"
@@ -39,7 +130,7 @@ export function HeroVideo() {
                 />
               ) : (
                 <button
-                  onClick={() => setPlaying(true)}
+                  onClick={() => setStarted(true)}
                   className="absolute inset-0 w-full h-full group cursor-pointer"
                   aria-label="Play ceremony video"
                 >
@@ -53,7 +144,9 @@ export function HeroVideo() {
                   <div className="absolute inset-0 bg-navy-950/30 group-hover:bg-navy-950/10 transition-colors" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gold-500/90 group-hover:bg-gold-400 flex items-center justify-center transition-all group-hover:scale-110 shadow-lg shadow-gold-500/30">
-                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-navy-950 ml-1" fill="currentColor" />
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-navy-950 ml-1" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
                     </div>
                   </div>
                 </button>
