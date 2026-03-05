@@ -24,10 +24,6 @@ export const metadata: Metadata = {
   title: "Eesha Half Saree Ceremony | March 29, 2026",
   description:
     "You're invited to celebrate Eesha's Half Saree Ceremony on Sunday, March 29th 2026 at Celebrations Event Center, Leander, TX.",
-  icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png",
-  },
   openGraph: {
     title: "Eesha Half Saree Ceremony",
     description:
@@ -71,8 +67,6 @@ export default function RootLayout({
       <head>
         <meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex" />
         <meta name="googlebot" content="noindex, nofollow" />
-        <link rel="icon" href="/icon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/apple-icon.png" />
       </head>
       <body
         className={`${cormorant.variable} ${outfit.variable} antialiased`}
