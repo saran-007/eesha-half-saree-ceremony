@@ -117,8 +117,11 @@ function buildReminderEmail(firstName: string, rsvpLink: string): string {
       <a href="${rsvpLink}" style="display:inline-block;background:transparent;color:#d4a843;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:bold;font-size:14px;font-family:Arial,sans-serif;border:2px solid #d4a843;margin:0 8px;">
         View RSVP
       </a>
-      <p style="color:#ebe0c0;font-size:12px;margin:24px 0 0;opacity:0.6;">
+      <p style="color:#ebe0c0;font-size:13px;margin:24px 0 0;opacity:0.7;">
         With love and blessings
+      </p>
+      <p style="color:#faf3e0;font-size:14px;margin:6px 0 0;opacity:0.8;">
+        Saran, Usha &amp; Rithika
       </p>
     </div>
   </div>

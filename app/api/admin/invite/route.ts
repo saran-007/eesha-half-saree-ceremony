@@ -113,8 +113,11 @@ function buildInviteEmail(firstName: string, rsvpLink: string): string {
       <a href="${rsvpLink}" style="display:inline-block;background:#d4a843;color:#0a1628;text-decoration:none;padding:14px 32px;border-radius:50px;font-weight:bold;font-size:16px;font-family:Arial,sans-serif;">
         RSVP Now
       </a>
-      <p style="color:#ebe0c0;font-size:12px;margin:24px 0 0;opacity:0.6;">
+      <p style="color:#ebe0c0;font-size:13px;margin:24px 0 0;opacity:0.7;">
         With love and blessings
+      </p>
+      <p style="color:#faf3e0;font-size:14px;margin:6px 0 0;opacity:0.8;">
+        Saran, Usha &amp; Rithika
       </p>
     </div>
   </div>
