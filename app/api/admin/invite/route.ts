@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
       try {
         await getResend().emails.send({
-          from: process.env.EMAIL_FROM || "Eesha's Ceremony <onboarding@resend.dev>",
+          from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
           to: guest.email,
           subject: `You're Invited: ${EVENT.title}`,
           html: buildInviteEmail(guest.first_name, rsvpLink),

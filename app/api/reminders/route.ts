@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       try {
         const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
         await getResend().emails.send({
-          from: process.env.EMAIL_FROM || "Eesha's Ceremony <onboarding@resend.dev>",
+          from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
           to: guest.email,
           subject: `Reminder: ${EVENT.title} is coming up!`,
           html: buildReminderEmail(guest.first_name, rsvpLink),
