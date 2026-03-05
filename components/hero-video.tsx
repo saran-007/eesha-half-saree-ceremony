@@ -63,28 +63,42 @@ export function HeroVideo() {
                 <source src={VIDEO_URL} type="video/mp4" />
               </video>
 
-              {/* Unmute prompt */}
-              <button
-                onClick={toggleMute}
-                className="absolute bottom-4 right-4 z-20 cursor-pointer"
-                aria-label={muted ? "Unmute video" : "Mute video"}
-              >
-                {muted ? (
+              {/* Unmute prompt - centered and prominent when muted */}
+              {muted ? (
+                <button
+                  onClick={toggleMute}
+                  className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
+                  aria-label="Tap to hear the music"
+                >
+                  <div className="absolute inset-0 bg-navy-950/20" />
                   <div
-                    className={`flex items-center gap-2 px-4 py-2.5 bg-gold-500/90 hover:bg-gold-400 text-navy-950 rounded-full font-sans text-sm font-semibold transition-all hover:scale-105 shadow-lg shadow-gold-500/30 ${
-                      showUnmuteHint ? "animate-pulse" : ""
-                    }`}
+                    className="relative flex flex-col items-center gap-3 px-8 py-5 sm:px-10 sm:py-6 bg-navy-950/70 backdrop-blur-md rounded-2xl border border-gold-500/40 shadow-2xl shadow-gold-500/20 transition-all hover:scale-105 hover:bg-navy-950/80"
+                    style={{
+                      animation: "float 3s ease-in-out infinite",
+                    }}
                   >
-                    <VolumeX className="w-4 h-4" />
-                    <span className="hidden sm:inline">Tap to hear the music</span>
-                    <span className="sm:hidden">Unmute</span>
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gold-500 flex items-center justify-center shadow-lg shadow-gold-500/40">
+                      <Volume2 className="w-7 h-7 sm:w-8 sm:h-8 text-navy-950" />
+                    </div>
+                    <span className="text-gold-400 font-serif text-lg sm:text-xl font-semibold tracking-wide">
+                      Tap to hear the music
+                    </span>
+                    <span className="text-cream-200/50 font-sans text-xs">
+                      Classical flute instrumental
+                    </span>
                   </div>
-                ) : (
+                </button>
+              ) : (
+                <button
+                  onClick={toggleMute}
+                  className="absolute bottom-4 right-4 z-20 cursor-pointer"
+                  aria-label="Mute video"
+                >
                   <div className="flex items-center gap-2 px-3 py-2.5 bg-navy-950/60 hover:bg-navy-950/80 text-cream-50 rounded-full font-sans text-sm transition-all backdrop-blur-sm">
                     <Volume2 className="w-4 h-4" />
                   </div>
-                )}
-              </button>
+                </button>
+              )}
             </div>
           </div>
         </div>
