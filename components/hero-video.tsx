@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
-import { Volume2, VolumeX } from "lucide-react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { Volume2 } from "lucide-react";
 import { EVENT } from "@/lib/constants";
 
 const VIDEO_URL = process.env.NEXT_PUBLIC_VIDEO_URL;
@@ -9,26 +9,48 @@ const VIDEO_URL = process.env.NEXT_PUBLIC_VIDEO_URL;
 export function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [muted, setMuted] = useState(true);
-  const [showUnmuteHint, setShowUnmuteHint] = useState(true);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [started, setStarted] = useState(false);
+  const thumbnailUrl = `https://img.youtube.com/vi/${EVENT.youtubeVideoId}/maxresdefault.jpg`;
+
+  const handleUnmute = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      videoRef.current.play().catch(() => {});
+      setMuted(false);
+    }
+  }, []);
+
+  const handleMute = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+      setMuted(true);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!showUnmuteHint) return;
-    const timer = setTimeout(() => setShowUnmuteHint(false), 10000);
-    return () => clearTimeout(timer);
-  }, [showUnmuteHint]);
+    if (!VIDEO_URL || videoFailed) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-  function toggleMute() {
-    if (videoRef.current) {
-      const next = !muted;
-      videoRef.current.muted = next;
-      setMuted(next);
-      if (!next) setShowUnmuteHint(false);
+    const playVideo = () => {
+      video.play().catch(() => {
+        setVideoFailed(true);
+      });
+    };
+
+    if (video.readyState >= 2) {
+      playVideo();
+    } else {
+      video.addEventListener("loadeddata", playVideo, { once: true });
     }
-  }
 
-  if (!VIDEO_URL) {
-    return <YouTubeFallback />;
-  }
+    return () => {
+      video.removeEventListener("loadeddata", playVideo);
+    };
+  }, [videoFailed]);
+
+  const showNativeVideo = VIDEO_URL && !videoFailed;
 
   return (
     <section className="relative w-full">
@@ -51,98 +73,59 @@ export function HeroVideo() {
         <div className="mt-6">
           <div className="ornamental-border rounded-lg overflow-hidden shadow-2xl shadow-gold-500/10 relative">
             <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover"
-                preload="auto"
-              >
-                <source src={VIDEO_URL} type="video/mp4" />
-              </video>
 
-              {/* Unmute prompt - centered and prominent when muted */}
-              {muted ? (
-                <button
-                  onClick={toggleMute}
-                  className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
-                  aria-label="Tap to hear the music"
-                >
-                  <div className="absolute inset-0 bg-navy-950/20" />
-                  <div
-                    className="relative flex flex-col items-center gap-3 px-8 py-5 sm:px-10 sm:py-6 bg-navy-950/70 backdrop-blur-md rounded-2xl border border-gold-500/40 shadow-2xl shadow-gold-500/20 transition-all hover:scale-105 hover:bg-navy-950/80"
-                    style={{
-                      animation: "float 3s ease-in-out infinite",
-                    }}
+              {showNativeVideo && (
+                <>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="absolute inset-0 w-full h-full object-cover"
+                    preload="auto"
+                    onError={() => setVideoFailed(true)}
                   >
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gold-500 flex items-center justify-center shadow-lg shadow-gold-500/40">
-                      <Volume2 className="w-7 h-7 sm:w-8 sm:h-8 text-navy-950" />
-                    </div>
-                    <span className="text-gold-400 font-serif text-lg sm:text-xl font-semibold tracking-wide">
-                      Tap to hear the music
-                    </span>
-                    <span className="text-cream-200/50 font-sans text-xs">
-                      Classical flute instrumental
-                    </span>
-                  </div>
-                </button>
-              ) : (
-                <button
-                  onClick={toggleMute}
-                  className="absolute bottom-4 right-4 z-20 cursor-pointer"
-                  aria-label="Mute video"
-                >
-                  <div className="flex items-center gap-2 px-3 py-2.5 bg-navy-950/60 hover:bg-navy-950/80 text-cream-50 rounded-full font-sans text-sm transition-all backdrop-blur-sm">
-                    <Volume2 className="w-4 h-4" />
-                  </div>
-                </button>
+                    <source src={VIDEO_URL} type="video/mp4" />
+                  </video>
+
+                  {muted ? (
+                    <button
+                      onClick={handleUnmute}
+                      className="absolute inset-0 z-20 flex items-center justify-center cursor-pointer"
+                      aria-label="Tap to hear the music"
+                    >
+                      <div className="absolute inset-0 bg-navy-950/15" />
+                      <div
+                        className="relative flex flex-col items-center gap-3 px-8 py-5 sm:px-10 sm:py-6 bg-navy-950/70 backdrop-blur-md rounded-2xl border border-gold-500/40 shadow-2xl shadow-gold-500/20 transition-all hover:scale-105 hover:bg-navy-950/80"
+                        style={{ animation: "float 3s ease-in-out infinite" }}
+                      >
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gold-500 flex items-center justify-center shadow-lg shadow-gold-500/40">
+                          <Volume2 className="w-7 h-7 sm:w-8 sm:h-8 text-navy-950" />
+                        </div>
+                        <span className="text-gold-400 font-serif text-lg sm:text-xl font-semibold tracking-wide">
+                          Tap to hear the music
+                        </span>
+                        <span className="text-cream-200/50 font-sans text-xs">
+                          Classical flute instrumental
+                        </span>
+                      </div>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleMute}
+                      className="absolute bottom-4 right-4 z-20 cursor-pointer"
+                      aria-label="Mute video"
+                    >
+                      <div className="flex items-center gap-2 px-3 py-2.5 bg-navy-950/60 hover:bg-navy-950/80 text-cream-50 rounded-full font-sans text-sm transition-all backdrop-blur-sm">
+                        <Volume2 className="w-4 h-4" />
+                      </div>
+                    </button>
+                  )}
+                </>
               )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function YouTubeFallback() {
-  const videoRef = useRef<HTMLIFrameElement>(null);
-  const [started, setStarted] = useState(false);
-  const thumbnailUrl = `https://img.youtube.com/vi/${EVENT.youtubeVideoId}/maxresdefault.jpg`;
-
-  return (
-    <section className="relative w-full">
-      <div className="relative z-10 max-w-5xl mx-auto px-4 pt-10 pb-4 sm:pt-14 sm:pb-6">
-        <h1
-          className="text-center font-serif text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-3 leading-tight"
-          style={{
-            background:
-              "linear-gradient(90deg, #c9973f 0%, #e0be6a 25%, #d4a843 50%, #e0be6a 75%, #c9973f 100%)",
-            backgroundSize: "200% auto",
-            WebkitBackgroundClip: "text",
-            backgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            animation: "shimmer 4s linear infinite",
-          }}
-        >
-          {EVENT.title}
-        </h1>
-
-        <div className="mt-6">
-          <div className="ornamental-border rounded-lg overflow-hidden shadow-2xl shadow-gold-500/10">
-            <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-              {started ? (
-                <iframe
-                  ref={videoRef}
-                  className="absolute inset-0 w-full h-full"
-                  src={`https://www.youtube.com/embed/${EVENT.youtubeVideoId}?autoplay=1&loop=1&playlist=${EVENT.youtubeVideoId}&rel=0&modestbranding=1`}
-                  title="Eesha Half Saree Ceremony"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
-              ) : (
+              {!showNativeVideo && !started && (
                 <button
                   onClick={() => setStarted(true)}
                   className="absolute inset-0 w-full h-full group cursor-pointer"
@@ -165,6 +148,17 @@ function YouTubeFallback() {
                   </div>
                 </button>
               )}
+
+              {!showNativeVideo && started && (
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src={`https://www.youtube.com/embed/${EVENT.youtubeVideoId}?autoplay=1&loop=1&playlist=${EVENT.youtubeVideoId}&rel=0&modestbranding=1`}
+                  title="Eesha Half Saree Ceremony"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              )}
+
             </div>
           </div>
         </div>
