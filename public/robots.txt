@@ -1,6 +1,48 @@
-User-agent: *
+# Allow social media crawlers for link previews
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: WhatsApp
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Slackbot
+Allow: /
+
+User-agent: TelegramBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: iMessageBot
+Allow: /
+
+# Block search engine indexing
+User-agent: Googlebot
 Disallow: /
 
+User-agent: Bingbot
+Disallow: /
+
+User-agent: YandexBot
+Disallow: /
+
+User-agent: Baiduspider
+Disallow: /
+
+User-agent: DuckDuckBot
+Disallow: /
+
+# Block LLM bots and scrapers
 User-agent: GPTBot
 Disallow: /
 
@@ -26,4 +68,8 @@ User-agent: Bytespider
 Disallow: /
 
 User-agent: cohere-ai
+Disallow: /
+
+# Block everything else by default
+User-agent: *
 Disallow: /
