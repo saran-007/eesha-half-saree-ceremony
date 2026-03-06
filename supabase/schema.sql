@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS guests (
   non_veg_count INTEGER DEFAULT 0,
   rsvp_responded_at TIMESTAMPTZ,
   reminder_sent_at TIMESTAMPTZ,
+  wa_message_id TEXT,
+  wa_delivery_status TEXT DEFAULT 'none',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -51,3 +53,7 @@ CREATE POLICY "Allow public delete"
 CREATE POLICY "Allow service role full access"
   ON guests FOR ALL
   USING (auth.role() = 'service_role');
+
+-- WhatsApp tracking columns (run ALTER if table already exists)
+-- ALTER TABLE guests ADD COLUMN IF NOT EXISTS wa_message_id TEXT;
+-- ALTER TABLE guests ADD COLUMN IF NOT EXISTS wa_delivery_status TEXT DEFAULT 'none';

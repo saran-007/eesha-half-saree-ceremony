@@ -59,11 +59,24 @@ export async function POST(request: NextRequest) {
         try {
           const { createWasender } = await import("wasenderapi");
           const wasender = createWasender(process.env.WASENDER_API_KEY!);
-          await wasender.sendTextMessage({
+          const waResponse = await wasender.sendTextMessage({
             to: guest.mobile,
-            text: `Hi ${guest.first_name}! 🎉\n\nYou're invited to *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nPlease RSVP here: ${rsvpLink}\n\nWith love,\nSaran, Usha & Rithika`,
+            text: `Hi ${guest.first_name}! 🎉\n\nYou're invited to *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nPlease RSVP here: ${rsvpLink}\n\nReply *Yes* or *No* to RSVP directly here!\n\nWith love,\nSaran, Usha & Rithika`,
           });
           guestResult.whatsapp = "sent";
+
+          const msgId = (waResponse as Record<string, unknown>)?.data
+            ? ((waResponse as Record<string, unknown>).data as Record<string, unknown>)?.msgId
+            : (waResponse as Record<string, unknown>)?.msgId;
+          if (msgId) {
+            await supabase
+              .from("guests")
+              .update({
+                wa_message_id: String(msgId),
+                wa_delivery_status: "sent",
+              })
+              .eq("id", guest.id);
+          }
         } catch {
           guestResult.whatsapp = "failed";
         }

@@ -36,6 +36,7 @@ interface Guest {
   veg_count: number;
   non_veg_count: number;
   rsvp_responded_at: string | null;
+  wa_delivery_status: string | null;
   created_at: string;
 }
 
@@ -463,21 +464,38 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function InviteStatus({ guest }: { guest: Guest }) {
-  if (guest.invite_opened_at) {
-    return (
-      <span className="text-teal-400 text-xs flex items-center gap-1">
-        <Eye className="w-3 h-3" /> Opened
-      </span>
-    );
-  }
-  if (guest.invite_sent_at) {
-    return (
-      <span className="text-blue-400 text-xs flex items-center gap-1">
-        <Mail className="w-3 h-3" /> Sent
-      </span>
-    );
-  }
-  return <span className="text-cream-200/30 text-xs">Not sent</span>;
+  const waStatus = guest.wa_delivery_status;
+  const waLabel: Record<string, { text: string; color: string }> = {
+    sent: { text: "WA Sent", color: "text-blue-300" },
+    delivered: { text: "WA Delivered", color: "text-teal-300" },
+    read: { text: "WA Read", color: "text-green-300" },
+    failed: { text: "WA Failed", color: "text-rose-300" },
+  };
+
+  return (
+    <div className="flex flex-col gap-1">
+      {guest.invite_opened_at ? (
+        <span className="text-teal-400 text-xs flex items-center gap-1">
+          <Eye className="w-3 h-3" /> Email Opened
+        </span>
+      ) : guest.invite_sent_at ? (
+        <span className="text-blue-400 text-xs flex items-center gap-1">
+          <Mail className="w-3 h-3" /> Email Sent
+        </span>
+      ) : (
+        <span className="text-cream-200/30 text-xs">Not sent</span>
+      )}
+      {waStatus && waStatus !== "none" && waLabel[waStatus] && (
+        <span className={`${waLabel[waStatus].color} text-xs flex items-center gap-1`}>
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+            <path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.955 9.955 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2zm0 18a8 8 0 01-4.243-1.212l-.29-.175-3.027.793.807-2.95-.192-.304A8 8 0 1112 20z" />
+          </svg>
+          {waLabel[waStatus].text}
+        </span>
+      )}
+    </div>
+  );
 }
 
 function AddGuestForm({ onAdded }: { onAdded: () => void }) {
