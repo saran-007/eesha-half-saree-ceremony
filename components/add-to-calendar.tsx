@@ -10,7 +10,7 @@ export function AddToCalendar() {
       "VERSION:2.0",
       "PRODID:-//Eesha Half Saree Ceremony//EN",
       "BEGIN:VEVENT",
-      "DTSTART:20260329T153000Z",
+      "DTSTART:20260329T160000Z",
       "DTEND:20260329T190000Z",
       "SUMMARY:Eesha Half Saree Ceremony",
       "DESCRIPTION:You are invited to Eesha's Half Saree Ceremony",
