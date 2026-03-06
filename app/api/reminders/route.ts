@@ -7,11 +7,19 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const AUDIENCE_FILTERS: Record<string, (q: ReturnType<ReturnType<typeof getServiceClient>["from"]>) => ReturnType<ReturnType<typeof getServiceClient>["from"]>> = {
-  rsvp_nudge: (q) => q.eq("rsvp_status", "pending").not("invite_sent_at", "is", null),
-  event_reminder: (q) => q.eq("rsvp_status", "yes"),
-  thank_you: (q) => q.eq("rsvp_status", "yes"),
-};
+async function fetchAudience(supabase: ReturnType<typeof getServiceClient>, type: string) {
+  if (type === "rsvp_nudge") {
+    return supabase
+      .from("guests")
+      .select("*")
+      .eq("rsvp_status", "pending")
+      .not("invite_sent_at", "is", null);
+  }
+  return supabase
+    .from("guests")
+    .select("*")
+    .eq("rsvp_status", "yes");
+}
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -37,13 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Template '${type}' not found` }, { status: 404 });
   }
 
-  let query = supabase.from("guests").select("*");
-  const filterFn = AUDIENCE_FILTERS[type];
-  if (filterFn) {
-    query = filterFn(query) as typeof query;
-  }
-
-  const { data: guests, error } = await query;
+  const { data: guests, error } = await fetchAudience(supabase, type);
 
   if (error || !guests) {
     return NextResponse.json({ error: "Failed to fetch guests" }, { status: 500 });
