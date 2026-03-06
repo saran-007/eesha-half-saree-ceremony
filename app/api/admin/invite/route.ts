@@ -65,9 +65,10 @@ export async function POST(request: NextRequest) {
           });
           guestResult.whatsapp = "sent";
 
-          const msgId = (waResponse as Record<string, unknown>)?.data
-            ? ((waResponse as Record<string, unknown>).data as Record<string, unknown>)?.msgId
-            : (waResponse as Record<string, unknown>)?.msgId;
+          const raw = waResponse as unknown as Record<string, unknown>;
+          const msgId = raw?.response
+            ? (raw.response as Record<string, unknown>)?.message
+            : undefined;
           if (msgId) {
             await supabase
               .from("guests")
