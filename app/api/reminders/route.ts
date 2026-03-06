@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
         const text = replacePlaceholders(template.whatsapp_text, guestVars);
         const { createWasender } = await import("wasenderapi");
         const wasender = createWasender(process.env.WASENDER_API_KEY!);
-        await wasender.sendTextMessage({ to: guest.mobile, text });
+        await wasender.sendText({ to: guest.mobile, text });
         results.push({ id: guest.id, whatsapp: "sent" });
       } catch {
         results.push({ id: guest.id, whatsapp: "failed" });
