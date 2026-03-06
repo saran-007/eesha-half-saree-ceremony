@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       if (guest.mobile && process.env.WASENDER_API_KEY) {
         try {
           const { createWasender } = await import("wasenderapi");
-          const wasender = createWasender({ apiKey: process.env.WASENDER_API_KEY });
+          const wasender = createWasender(process.env.WASENDER_API_KEY!);
           await wasender.sendTextMessage({
             to: guest.mobile,
             text: `Hi ${guest.first_name}! 🎉\n\nYou're invited to *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nPlease RSVP here: ${rsvpLink}\n\nWith love,\nSaran, Usha & Rithika`,
