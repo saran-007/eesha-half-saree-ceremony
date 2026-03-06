@@ -123,9 +123,13 @@ function buildConfirmationEmail(
         <p style="color:#faf3e0;margin:4px 0;font-size:15px;"><strong>Date:</strong> ${EVENT.date}</p>
         <p style="color:#faf3e0;margin:4px 0;font-size:15px;"><strong>Time:</strong> ${EVENT.time}</p>
         <p style="color:#faf3e0;margin:4px 0;font-size:15px;"><strong>Venue:</strong> ${EVENT.venue}</p>
-        <p style="color:#ebe0c0;margin:4px 0;font-size:13px;">${EVENT.address}</p>
+        <a href="${EVENT.googleMapsUrl}" style="color:#e0be6a;font-size:13px;text-decoration:underline;">${EVENT.address}</a>
       </div>
-      <p style="color:#ebe0c0;font-size:13px;margin:24px 0 0;opacity:0.7;">With love and blessings</p>
+      <div style="margin:0 0 24px;">
+        <a href="${EVENT.googleMapsUrl}" style="display:inline-block;background:#d4a843;color:#0a1628;text-decoration:none;padding:12px 24px;border-radius:50px;font-weight:bold;font-size:14px;font-family:Arial,sans-serif;margin:4px;">Get Directions</a>
+        <a href="${EVENT.googleCalendarUrl}" style="display:inline-block;background:transparent;color:#d4a843;text-decoration:none;padding:12px 24px;border-radius:50px;font-weight:bold;font-size:14px;font-family:Arial,sans-serif;border:2px solid #d4a843;margin:4px;">Add to Calendar</a>
+      </div>
+      <p style="color:#ebe0c0;font-size:13px;margin:16px 0 0;opacity:0.7;">With love and blessings</p>
       <p style="color:#faf3e0;font-size:14px;margin:6px 0 0;opacity:0.8;">Saran, Usha &amp; Rithika</p>
     </div>
   </div>
