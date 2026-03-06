@@ -57,3 +57,44 @@ CREATE POLICY "Allow service role full access"
 -- WhatsApp tracking columns (run ALTER if table already exists)
 -- ALTER TABLE guests ADD COLUMN IF NOT EXISTS wa_message_id TEXT;
 -- ALTER TABLE guests ADD COLUMN IF NOT EXISTS wa_delivery_status TEXT DEFAULT 'none';
+
+-- Message templates for admin-editable automated messages
+CREATE TABLE IF NOT EXISTS message_templates (
+  id TEXT PRIMARY KEY,
+  email_subject TEXT NOT NULL,
+  email_body TEXT NOT NULL,
+  whatsapp_text TEXT NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE message_templates ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow service role full access on templates"
+  ON message_templates FOR ALL
+  USING (auth.role() = 'service_role');
+
+CREATE POLICY "Allow public read on templates"
+  ON message_templates FOR SELECT
+  USING (true);
+
+-- Seed default templates
+INSERT INTO message_templates (id, email_subject, email_body, whatsapp_text) VALUES
+(
+  'rsvp_nudge',
+  'You''re Invited: {{event_title}} - Please RSVP',
+  'Dear {{first_name}},\n\nWe''d love to have you join us for {{event_title}}!\n\nPlease take a moment to let us know if you can make it.\n\n{{event_details}}\n\nRSVP here: {{rsvp_link}}',
+  'Hi {{first_name}}! 🎉\n\nWe''d love to hear from you! You''re invited to *{{event_title}}*\n\n📅 {{event_date}}\n🕐 {{event_time}}\n📍 {{venue}}, {{address}}\n\nPlease RSVP: {{rsvp_link}}\n\nWith love,\nSaran, Usha & Rithika'
+),
+(
+  'event_reminder',
+  'Reminder: {{event_title}} is coming up!',
+  'Dear {{first_name}},\n\nWe''re excited to see you at the ceremony!\n\n{{event_details}}\n\nGet Directions: {{maps_link}}\nView RSVP: {{rsvp_link}}',
+  'Hi {{first_name}}! 🎉\n\nReminder: *{{event_title}}*\n\n📅 {{event_date}}\n🕐 {{event_time}}\n📍 {{venue}}, {{address}}\n\nWe look forward to seeing you!\n\n📍 Directions: {{maps_link}}\n🔗 Your RSVP: {{rsvp_link}}\n\nWith love,\nSaran, Usha & Rithika'
+),
+(
+  'thank_you',
+  'Thank You for Celebrating with Us! - {{event_title}}',
+  'Dear {{first_name}},\n\nThank you so much for being part of {{event_title}}! Your presence made the day truly special.\n\nWe are grateful for your blessings and love.',
+  'Hi {{first_name}}! 🙏\n\nThank you so much for being part of *{{event_title}}*! Your presence made the day truly special.\n\nWe are grateful for your blessings and love. 💛\n\nWith love,\nSaran, Usha & Rithika'
+)
+ON CONFLICT (id) DO NOTHING;

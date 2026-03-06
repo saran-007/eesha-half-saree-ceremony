@@ -155,13 +155,22 @@ export default function AdminDashboard() {
           <h1 className="font-serif text-3xl sm:text-4xl text-gold-400">
             Guest Management
           </h1>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-cream-200/40 hover:text-cream-200/70 font-sans text-sm transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Sign Out
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/admin/messages")}
+              className="flex items-center gap-2 text-gold-400/60 hover:text-gold-400 font-sans text-sm transition-colors"
+            >
+              <Mail className="w-4 h-4" />
+              Messages
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-cream-200/40 hover:text-cream-200/70 font-sans text-sm transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
         </div>
 
         {/* Stats Cards */}

@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import { Resend } from "resend";
-import { EVENT } from "@/lib/constants";
+import { replacePlaceholders, buildEmailHtml } from "@/lib/templates";
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
+
+const AUDIENCE_FILTERS: Record<string, (q: ReturnType<ReturnType<typeof getServiceClient>["from"]>) => ReturnType<ReturnType<typeof getServiceClient>["from"]>> = {
+  rsvp_nudge: (q) => q.eq("rsvp_status", "pending").not("invite_sent_at", "is", null),
+  event_reminder: (q) => q.eq("rsvp_status", "yes"),
+  thank_you: (q) => q.eq("rsvp_status", "yes"),
+};
 
 export async function POST(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -13,13 +19,31 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const type = request.nextUrl.searchParams.get("type") || "event_reminder";
+  const validTypes = ["rsvp_nudge", "event_reminder", "thank_you"];
+  if (!validTypes.includes(type)) {
+    return NextResponse.json({ error: `Invalid type: ${type}` }, { status: 400 });
+  }
+
   const supabase = getServiceClient();
 
-  const { data: guests, error } = await supabase
-    .from("guests")
+  const { data: template } = await supabase
+    .from("message_templates")
     .select("*")
-    .eq("rsvp_status", "yes")
-    .not("invite_sent_at", "is", null);
+    .eq("id", type)
+    .single();
+
+  if (!template) {
+    return NextResponse.json({ error: `Template '${type}' not found` }, { status: 404 });
+  }
+
+  let query = supabase.from("guests").select("*");
+  const filterFn = AUDIENCE_FILTERS[type];
+  if (filterFn) {
+    query = filterFn(query) as typeof query;
+  }
+
+  const { data: guests, error } = await query;
 
   if (error || !guests) {
     return NextResponse.json({ error: "Failed to fetch guests" }, { status: 500 });
@@ -29,14 +53,22 @@ export async function POST(request: NextRequest) {
   const results = [];
 
   for (const guest of guests) {
+    const guestVars = {
+      "{{first_name}}": guest.first_name,
+      "{{rsvp_link}}": `${siteUrl}/rsvp/${guest.invite_token}`,
+    };
+
     if (guest.email) {
       try {
-        const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
+        const subject = replacePlaceholders(template.email_subject, guestVars);
+        const body = replacePlaceholders(template.email_body, guestVars);
+        const html = buildEmailHtml(body);
+
         await getResend().emails.send({
           from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
           to: guest.email,
-          subject: `Reminder: ${EVENT.title} is coming up!`,
-          html: buildReminderEmail(guest.first_name, rsvpLink),
+          subject,
+          html,
         });
         results.push({ id: guest.id, email: "sent" });
       } catch {
@@ -46,13 +78,10 @@ export async function POST(request: NextRequest) {
 
     if (guest.mobile && process.env.WASENDER_API_KEY) {
       try {
+        const text = replacePlaceholders(template.whatsapp_text, guestVars);
         const { createWasender } = await import("wasenderapi");
         const wasender = createWasender(process.env.WASENDER_API_KEY!);
-        const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
-        await wasender.sendTextMessage({
-          to: guest.mobile,
-          text: `Hi ${guest.first_name}! 🎉\n\nReminder: *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nWe look forward to seeing you!\n\n📍 Directions: ${EVENT.googleMapsUrl}\n🔗 Your RSVP: ${rsvpLink}\n\nWith love,\nSaran, Usha & Rithika`,
-        });
+        await wasender.sendTextMessage({ to: guest.mobile, text });
         results.push({ id: guest.id, whatsapp: "sent" });
       } catch {
         results.push({ id: guest.id, whatsapp: "failed" });
@@ -66,62 +95,8 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
-    sent: results.length,
+    type,
+    audienceCount: guests.length,
     results,
   });
-}
-
-function buildReminderEmail(firstName: string, rsvpLink: string): string {
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background-color:#0a1628;font-family:Georgia,serif;">
-  <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
-    <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0d2457 0%,#1b2d4f 100%);border:2px solid #d4a843;border-radius:12px;">
-      <h1 style="color:#d4a843;font-size:24px;margin:0 0 16px;">
-        Reminder: The celebration is almost here!
-      </h1>
-      <p style="color:#faf3e0;font-size:16px;margin:0 0 8px;">
-        Dear ${firstName},
-      </p>
-      <p style="color:#ebe0c0;font-size:15px;margin:0 0 24px;line-height:1.6;">
-        We're excited to see you at the ceremony!
-      </p>
-      <div style="background:rgba(212,168,67,0.1);border-radius:8px;padding:20px;margin:0 0 24px;">
-        <p style="color:#d4a843;font-size:18px;margin:0 0 12px;font-weight:bold;">
-          ${EVENT.title}
-        </p>
-        <p style="color:#faf3e0;margin:4px 0;font-size:15px;">
-          <strong>Date:</strong> ${EVENT.date}
-        </p>
-        <p style="color:#faf3e0;margin:4px 0;font-size:15px;">
-          <strong>Time:</strong> ${EVENT.time}
-        </p>
-        <p style="color:#faf3e0;margin:4px 0;font-size:15px;">
-          <strong>Venue:</strong> ${EVENT.venue}
-        </p>
-        <p style="color:#ebe0c0;margin:4px 0;font-size:13px;">
-          ${EVENT.address}
-        </p>
-      </div>
-      <a href="${EVENT.googleMapsUrl}" style="display:inline-block;background:#d4a843;color:#0a1628;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:bold;font-size:14px;font-family:Arial,sans-serif;margin:0 8px;">
-        Get Directions
-      </a>
-      <a href="${rsvpLink}" style="display:inline-block;background:transparent;color:#d4a843;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:bold;font-size:14px;font-family:Arial,sans-serif;border:2px solid #d4a843;margin:0 8px;">
-        View RSVP
-      </a>
-      <p style="color:#ebe0c0;font-size:13px;margin:24px 0 0;opacity:0.7;">
-        With love and blessings
-      </p>
-      <p style="color:#faf3e0;font-size:14px;margin:6px 0 0;opacity:0.8;">
-        Saran, Usha &amp; Rithika
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
 }
