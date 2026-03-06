@@ -1,6 +1,10 @@
 import { getServiceClient } from "@/lib/supabase";
 import { RsvpPageClient } from "./client";
 import { EVENT } from "@/lib/constants";
+import { HeroVideo } from "@/components/hero-video";
+import { EventDetails } from "@/components/event-details";
+import { AddToCalendar } from "@/components/add-to-calendar";
+import { GoogleMap } from "@/components/google-map";
 import { OrnamentalDivider } from "@/components/ornamental-divider";
 import { Footer } from "@/components/footer";
 
@@ -54,23 +58,19 @@ export default async function RsvpPage({ params }: Props) {
 
   return (
     <main className="min-h-screen bg-navy-950">
-      <div className="max-w-2xl mx-auto px-4 py-8 sm:py-12">
-        <h1 className="text-center font-serif text-3xl sm:text-4xl md:text-5xl font-semibold mb-2 gold-shimmer">
-          {EVENT.title}
-        </h1>
-        <p className="text-center text-cream-200 font-sans mb-2">
-          {EVENT.date} &middot; {EVENT.time}
-        </p>
-        <p className="text-center text-cream-200/60 font-sans text-sm mb-8">
-          {EVENT.venue}, {EVENT.address}
-        </p>
+      <HeroVideo />
+      <OrnamentalDivider />
+      <EventDetails />
 
-        <OrnamentalDivider />
-
-        <div className="bg-navy-900/60 backdrop-blur-sm rounded-xl ornamental-border p-6 sm:p-10 mt-6">
+      <section className="max-w-3xl mx-auto px-4 py-8 sm:py-12">
+        <div className="bg-navy-900/60 backdrop-blur-sm rounded-xl ornamental-border p-6 sm:p-10">
           <RsvpPageClient guest={guest} token={token} />
         </div>
-      </div>
+      </section>
+
+      <AddToCalendar />
+      <OrnamentalDivider />
+      <GoogleMap />
       <Footer />
     </main>
   );

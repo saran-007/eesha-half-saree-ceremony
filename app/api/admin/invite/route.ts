@@ -84,12 +84,9 @@ function buildInviteEmail(firstName: string, rsvpLink: string): string {
 <body style="margin:0;padding:0;background-color:#0a1628;font-family:Georgia,serif;">
   <div style="max-width:600px;margin:0 auto;padding:40px 20px;">
     <div style="text-align:center;padding:30px;background:linear-gradient(135deg,#0d2457 0%,#1b2d4f 100%);border:2px solid #d4a843;border-radius:12px;">
-      <h1 style="color:#d4a843;font-size:28px;margin:0 0 8px;">
+      <h1 style="color:#d4a843;font-size:28px;margin:0 0 24px;">
         ${EVENT.title}
       </h1>
-      <p style="color:#e0be6a;font-size:18px;margin:0 0 24px;">
-        ${EVENT.subtitle}
-      </p>
       <p style="color:#faf3e0;font-size:16px;margin:0 0 8px;">
         Dear ${firstName},
       </p>
