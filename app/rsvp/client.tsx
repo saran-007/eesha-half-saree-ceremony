@@ -20,19 +20,28 @@ interface GuestData {
 export function SelfRsvpClient() {
   const [guest, setGuest] = useState<GuestData | null>(null);
   const [token, setToken] = useState<string>("");
+  const [existingFound, setExistingFound] = useState(false);
   const [form, setForm] = useState({
     first_name: "",
     last_name: "",
     email: "",
-    mobile: "",
+    mobile: "+1",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  function formatPhone(value: string): string {
+    if (!value.startsWith("+1")) {
+      const digits = value.replace(/\D/g, "");
+      return "+1" + digits;
+    }
+    return value;
+  }
+
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     if (!form.first_name.trim() || !form.last_name.trim()) return;
-    if (!form.email.trim() && !form.mobile.trim()) {
+    if (!form.email.trim() && (!form.mobile.trim() || form.mobile.trim() === "+1")) {
       setError("Please provide an email or mobile number");
       return;
     }
@@ -40,11 +49,16 @@ export function SelfRsvpClient() {
     setLoading(true);
     setError("");
 
+    const mobile = form.mobile.trim() === "+1" ? "" : formatPhone(form.mobile.trim());
+
     try {
       const res = await fetch("/api/rsvp/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          mobile: mobile || undefined,
+        }),
       });
 
       const data = await res.json();
@@ -53,8 +67,14 @@ export function SelfRsvpClient() {
         return;
       }
 
-      setGuest(data.guest);
-      setToken(data.guest.invite_token);
+      if (data.existing) {
+        setGuest(data.guest);
+        setToken(data.guest.invite_token);
+        setExistingFound(true);
+      } else {
+        setGuest(data.guest);
+        setToken(data.guest.invite_token);
+      }
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -63,7 +83,18 @@ export function SelfRsvpClient() {
   }
 
   if (guest && token) {
-    return <RsvpForm guest={guest} token={token} />;
+    return (
+      <div className="space-y-4">
+        {existingFound && guest.rsvp_status !== "pending" && (
+          <div className="bg-gold-500/10 border border-gold-500/30 rounded-lg p-4 text-center mb-4">
+            <p className="text-gold-400 font-sans text-sm">
+              Welcome back, {guest.first_name}! Here is your current RSVP.
+            </p>
+          </div>
+        )}
+        <RsvpForm guest={guest} token={token} />
+      </div>
+    );
   }
 
   return (
@@ -105,10 +136,16 @@ export function SelfRsvpClient() {
           className="w-full bg-navy-800 border border-gold-500/20 rounded-xl px-4 py-3 text-cream-50 font-sans placeholder:text-cream-200/30 focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-colors"
         />
         <input
-          placeholder="Mobile Number"
+          placeholder="+1 (xxx) xxx-xxxx"
           type="tel"
           value={form.mobile}
-          onChange={(e) => setForm({ ...form, mobile: e.target.value })}
+          onChange={(e) => {
+            let val = e.target.value;
+            if (!val.startsWith("+1")) {
+              val = "+1" + val.replace(/[^0-9]/g, "");
+            }
+            setForm({ ...form, mobile: val });
+          }}
           className="w-full bg-navy-800 border border-gold-500/20 rounded-xl px-4 py-3 text-cream-50 font-sans placeholder:text-cream-200/30 focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-colors"
         />
 

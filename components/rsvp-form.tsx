@@ -38,7 +38,9 @@ export function RsvpForm({ guest, token }: RsvpFormProps) {
     guest.rsvp_status === "yes" ? true : guest.rsvp_status === "no" ? false : null
   );
   const [guestCount, setGuestCount] = useState(guest.guest_count || 1);
-  const [vegCount, setVegCount] = useState(guest.veg_count || 0);
+  const [vegCount, setVegCount] = useState(
+    guest.veg_count > 0 ? guest.veg_count : guest.guest_count || 1
+  );
   const [submitting, setSubmitting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
@@ -133,9 +135,10 @@ export function RsvpForm({ guest, token }: RsvpFormProps) {
           <button
             onClick={() => {
               setAttending(true);
+              setVegCount(guestCount);
               setStep("details");
             }}
-            className="flex items-center justify-center gap-3 px-8 py-4 bg-gold-500/15 hover:bg-gold-500/25 border-2 border-gold-500 text-gold-400 rounded-xl font-sans font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-gold-500/20"
+            className="flex items-center justify-center gap-3 px-8 py-4 bg-green-600/15 hover:bg-green-600/25 border-2 border-green-500 text-green-400 rounded-xl font-sans font-semibold text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-green-500/20"
           >
             <Check className="w-6 h-6" />
             Joyfully Accept
@@ -145,7 +148,7 @@ export function RsvpForm({ guest, token }: RsvpFormProps) {
               setAttending(false);
               handleSubmit();
             }}
-            className="flex items-center justify-center gap-3 px-8 py-4 bg-navy-800/60 hover:bg-navy-800 border border-cream-200/20 text-cream-200 rounded-xl font-sans font-medium text-lg transition-all hover:scale-105"
+            className="flex items-center justify-center gap-3 px-8 py-4 bg-rose-600/15 hover:bg-rose-600/25 border-2 border-rose-500 text-rose-400 rounded-xl font-sans font-medium text-lg transition-all hover:scale-105 hover:shadow-lg hover:shadow-rose-500/20"
           >
             <X className="w-6 h-6" />
             Regretfully Decline
@@ -166,7 +169,7 @@ export function RsvpForm({ guest, token }: RsvpFormProps) {
                 onChange={(e) => {
                   const count = Number(e.target.value);
                   setGuestCount(count);
-                  setVegCount(Math.min(vegCount, count));
+                  setVegCount(count);
                 }}
                 className="w-full appearance-none bg-navy-800 border border-gold-500/30 rounded-xl px-5 py-4 text-cream-50 font-sans text-lg text-center focus:outline-none focus:border-gold-400 focus:ring-1 focus:ring-gold-400 transition-colors cursor-pointer"
               >
