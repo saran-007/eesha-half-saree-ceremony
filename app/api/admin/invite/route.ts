@@ -37,31 +37,52 @@ export async function POST(request: NextRequest) {
     const results = [];
 
     for (const guest of guests) {
-      if (!guest.email) {
-        results.push({ id: guest.id, status: "skipped", reason: "no email" });
-        continue;
+      const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
+      const guestResult: Record<string, string> = { id: guest.id };
+
+      if (guest.email) {
+        try {
+          await getResend().emails.send({
+            from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
+            to: guest.email,
+            subject: `You're Invited: ${EVENT.title}`,
+            html: buildInviteEmail(guest.first_name, rsvpLink),
+          });
+          guestResult.email = "sent";
+        } catch (emailError) {
+          const msg = emailError instanceof Error ? emailError.message : "Unknown error";
+          guestResult.email = `failed: ${msg}`;
+        }
       }
 
-      const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
+      if (guest.mobile && process.env.WASENDER_API_KEY) {
+        try {
+          const { createWasender } = await import("wasenderapi");
+          const wasender = createWasender({ apiKey: process.env.WASENDER_API_KEY });
+          await wasender.sendTextMessage({
+            to: guest.mobile,
+            text: `Hi ${guest.first_name}! 🎉\n\nYou're invited to *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nPlease RSVP here: ${rsvpLink}\n\nWith love,\nSaran, Usha & Rithika`,
+          });
+          guestResult.whatsapp = "sent";
+        } catch {
+          guestResult.whatsapp = "failed";
+        }
+      }
 
-      try {
-        await getResend().emails.send({
-          from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
-          to: guest.email,
-          subject: `You're Invited: ${EVENT.title}`,
-          html: buildInviteEmail(guest.first_name, rsvpLink),
-        });
-
+      if (guestResult.email === "sent" || guestResult.whatsapp === "sent") {
         await supabase
           .from("guests")
           .update({ invite_sent_at: new Date().toISOString() })
           .eq("id", guest.id);
-
-        results.push({ id: guest.id, status: "sent" });
-      } catch (emailError) {
-        const msg = emailError instanceof Error ? emailError.message : "Unknown error";
-        results.push({ id: guest.id, status: "failed", reason: msg });
+        guestResult.status = "sent";
+      } else if (!guest.email && !guest.mobile) {
+        guestResult.status = "skipped";
+        guestResult.reason = "no email or mobile";
+      } else {
+        guestResult.status = "failed";
       }
+
+      results.push(guestResult);
     }
 
     return NextResponse.json({ results });

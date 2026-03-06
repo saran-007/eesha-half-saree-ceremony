@@ -44,21 +44,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (guest.mobile && process.env.TWILIO_ACCOUNT_SID) {
+    if (guest.mobile && process.env.WASENDER_API_KEY) {
       try {
-        const twilio = await import("twilio");
-        const client = twilio.default(
-          process.env.TWILIO_ACCOUNT_SID,
-          process.env.TWILIO_AUTH_TOKEN
-        );
-        await client.messages.create({
-          body: `Hi ${guest.first_name}! Reminder: ${EVENT.title} is on ${EVENT.date}, ${EVENT.time} at ${EVENT.venue}, ${EVENT.address}. We look forward to seeing you! ${EVENT.googleMapsUrl}`,
-          from: process.env.TWILIO_PHONE_NUMBER,
+        const { createWasender } = await import("wasenderapi");
+        const wasender = createWasender({ apiKey: process.env.WASENDER_API_KEY });
+        const rsvpLink = `${siteUrl}/rsvp/${guest.invite_token}`;
+        await wasender.sendTextMessage({
           to: guest.mobile,
+          text: `Hi ${guest.first_name}! 🎉\n\nReminder: *${EVENT.title}*\n\n📅 ${EVENT.date}\n🕐 ${EVENT.time}\n📍 ${EVENT.venue}, ${EVENT.address}\n\nWe look forward to seeing you!\n\n📍 Directions: ${EVENT.googleMapsUrl}\n🔗 Your RSVP: ${rsvpLink}\n\nWith love,\nSaran, Usha & Rithika`,
         });
-        results.push({ id: guest.id, sms: "sent" });
+        results.push({ id: guest.id, whatsapp: "sent" });
       } catch {
-        results.push({ id: guest.id, sms: "failed" });
+        results.push({ id: guest.id, whatsapp: "failed" });
       }
     }
 
