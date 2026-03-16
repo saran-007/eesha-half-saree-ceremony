@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServiceClient } from "@/lib/supabase";
 import { isAdminAuthenticated } from "@/lib/admin-auth";
 import { Resend } from "resend";
@@ -8,10 +8,18 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-export async function POST() {
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function POST(request: NextRequest) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const channel = request.nextUrl.searchParams.get("channel") || "both";
+  const skipEmail = channel === "whatsapp";
+  const skipWhatsapp = channel === "email";
 
   const supabase = getServiceClient();
 
@@ -34,7 +42,7 @@ export async function POST() {
       status: guest.rsvp_status,
     };
 
-    if (guest.email && process.env.RESEND_API_KEY) {
+    if (!skipEmail && guest.email && process.env.RESEND_API_KEY) {
       try {
         await getResend().emails.send({
           from: process.env.EMAIL_FROM || "Eesha's Ceremony <hello@hello.eesha.info>",
@@ -56,7 +64,7 @@ export async function POST() {
       }
     }
 
-    if (guest.mobile && process.env.WASENDER_API_KEY) {
+    if (!skipWhatsapp && guest.mobile && process.env.WASENDER_API_KEY) {
       try {
         const { createWasender } = await import("wasenderapi");
         const wasender = createWasender(process.env.WASENDER_API_KEY!);
@@ -65,8 +73,10 @@ export async function POST() {
           : `Hi ${guest.first_name}!\n\nWe received your RSVP for *${EVENT.title}*. We'll miss you!\n\nWith love,\nSaran, Usha & Rithika`;
         await wasender.sendText({ to: guest.mobile, text });
         guestResult.whatsapp = "sent";
-      } catch {
-        guestResult.whatsapp = "failed";
+        await sleep(6000);
+      } catch (err) {
+        guestResult.whatsapp = `failed: ${err instanceof Error ? err.message : "unknown"}`;
+        await sleep(6000);
       }
     }
 

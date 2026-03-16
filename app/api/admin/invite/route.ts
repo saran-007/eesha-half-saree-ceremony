@@ -78,8 +78,10 @@ export async function POST(request: NextRequest) {
               })
               .eq("id", guest.id);
           }
+          await new Promise((r) => setTimeout(r, 6000));
         } catch {
           guestResult.whatsapp = "failed";
+          await new Promise((r) => setTimeout(r, 6000));
         }
       }
 

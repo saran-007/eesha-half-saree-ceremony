@@ -85,8 +85,10 @@ export async function POST(request: NextRequest) {
         const wasender = createWasender(process.env.WASENDER_API_KEY!);
         await wasender.sendText({ to: guest.mobile, text });
         results.push({ id: guest.id, whatsapp: "sent" });
+        await new Promise((r) => setTimeout(r, 6000));
       } catch {
         results.push({ id: guest.id, whatsapp: "failed" });
+        await new Promise((r) => setTimeout(r, 6000));
       }
     }
 
